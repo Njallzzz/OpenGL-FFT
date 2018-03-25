@@ -1,4 +1,8 @@
 #include "MusicController.h"
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 
 MusicController::MusicController(int window_size, const char *settingsFile) : m_playbackDevice(OpenDevice()) {
 	m_settingsFile = (char *) settingsFile;
@@ -66,19 +70,12 @@ MusicController::isPlaying() {
 void
 MusicController::SelectFile(int file) {
 	if (m_settingsFileContent.find(file) == m_settingsFileContent.end()) {
-		cout << "Invalid file selection: " << file << endl;
+		cerr << "Invalid file selection: " << file << endl;
 		return;
 	}
 	m_currentlySelected = file;
 	LoadMusicFile();
 	m_playbackBuffer->play();
-}
-
-void
-MusicController::SetVolume(float volume) {
-	if (m_playbackBuffer == NULL)
-		return;
-	m_playbackBuffer->setVolume(volume);
 }
 
 float *
@@ -88,8 +85,20 @@ MusicController::GetFFTBufferPtr() {
 
 int
 MusicController::GetSampleRate() {
-	cout << m_sfInfo.samplerate << endl;
 	return m_sfInfo.samplerate;
+}
+
+
+float
+MusicController::GetVolume() {
+	return m_playbackBuffer->getVolume();
+}
+
+void
+MusicController::SetVolume(float volume) {
+	if (m_playbackBuffer == NULL)
+		return;
+	m_playbackBuffer->setVolume(volume);
 }
 
 int
@@ -115,8 +124,14 @@ MusicController::SetWindowSize(int size) {
 	m_windowDataIn = new double[m_windowSize];
 	m_windowDataOut = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_windowSize);
 
-	for (int i = 0; i < m_windowSize; i++) {
-		m_magnitude[i] = 0;
+	if (m_logMagnitude) {
+		for (int i = 0; i < m_windowSize; i++) {
+			m_magnitude[i] = -INFINITY;
+		}
+	} else {
+		for (int i = 0; i < m_windowSize; i++) {
+			m_magnitude[i] = 0;
+		}
 	}
 
 	plan = fftw_plan_dft_r2c_1d(m_windowSize, m_windowDataIn, m_windowDataOut, FFTW_ESTIMATE);
@@ -139,6 +154,17 @@ MusicController::GetLogMagnitude() {
 void
 MusicController::SetLogMagnitude(bool state) {
 	m_logMagnitude = state;
+	if (!m_playbackBuffer->isPlaying()) {
+		if (m_logMagnitude) {
+			for (int i = 0; i < m_windowSize; i++) {
+				m_magnitude[i] = -INFINITY;
+			}
+		} else {
+			for (int i = 0; i < m_windowSize; i++) {
+				m_magnitude[i] = 0;
+			}
+		}
+	}
 }
 
 void
@@ -159,8 +185,15 @@ MusicController::Update() {
 
 	fftw_execute(plan);
 
-	for (int i = 0; i < m_windowSize; i++) {
-		m_magnitude[i] = sqrt(pow(m_windowDataOut[i][0], 2.0) + pow(m_windowDataOut[i][1], 2.0));
+	int count = 1;
+	for (int i = 64; i < m_windowSize; i = i * 2)
+		count++;
+
+	m_magnitude[0] = 0.0f;
+	for (int i = 1; i < m_windowSize; i++) {
+		m_magnitude[i] = (float) sqrt(pow(m_windowDataOut[i][0], 2.0) + pow(m_windowDataOut[i][1], 2.0));
+
+		m_magnitude[i] *= (float) 6.0f / ((float)count * count);
 	}
 	if (m_logMagnitude) {
 		for (int i = 0; i < m_windowSize; i++) {
@@ -175,7 +208,7 @@ MusicController::LoadSettingsFile() {
 
 	ifstream file(m_settingsFile);
 	if (!file.is_open()) {
-		cout << "Unable to open settings file: " << m_settingsFile << endl;
+		cerr << "Unable to open settings file: " << m_settingsFile << endl;
 		return true;
 	}
 
@@ -195,18 +228,18 @@ MusicController::LoadSettingsFile() {
 bool
 MusicController::LoadMusicFile() {
 	if (m_currentlySelected == -1) {
-		cout << "Attempting to load an invalid file" << endl;
+		cerr << "Attempting to load an invalid file" << endl;
 		return true;
 	}
 	SF_INFO sfInfo;
 	SNDFILE* newFile = sf_open(m_settingsFileContent[m_currentlySelected].c_str(), SFM_READ, &sfInfo);
 	if (newFile == NULL) {
-		cout << "Unable to load music file: " << m_settingsFileContent[m_currentlySelected] << endl;
+		cerr << "Unable to load music file: " << m_settingsFileContent[m_currentlySelected] << endl;
 		m_currentlySelected = -1;
 		return true;
 	}
 	if (sfInfo.channels != 1) {
-		cout << "Attempting to load a music file which is not a mono: " << m_settingsFileContent[m_currentlySelected] << endl;
+		cerr << "Attempting to load a music file which is not a mono: " << m_settingsFileContent[m_currentlySelected] << endl;
 		m_currentlySelected = -1;
 		return true;
 	}
@@ -221,6 +254,10 @@ MusicController::LoadMusicFile() {
 	cout << "Sections: " << m_sfInfo.sections << endl;
 	cout << "Seekable: " << m_sfInfo.seekable << endl;
 
+	float volume = 1.0f;
+	if (m_playbackBuffer != NULL)
+		volume = m_playbackBuffer->getVolume();
+
 	short *audiereSamples = new short[m_sfInfo.frames];
 	sf_read_short(newFile, audiereSamples, m_sfInfo.frames);
 	m_playbackBuffer = m_playbackDevice->openBuffer(audiereSamples, (int) m_sfInfo.frames, m_sfInfo.channels, m_sfInfo.samplerate, SF_S16);
@@ -233,7 +270,7 @@ MusicController::LoadMusicFile() {
 	sf_read_double(newFile, m_fftSamples, m_sfInfo.frames);
 	sf_close(newFile);
 
-	m_playbackBuffer->setVolume(1.0f);
+	m_playbackBuffer->setVolume(volume);
 	return false;
 }
 

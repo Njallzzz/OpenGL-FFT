@@ -1,0 +1,9 @@
+music/tones/50hz.wav
+music/tones/100hz.wav
+music/tones/200hz.wav
+music/tones/500hz.wav
+music/tones/1khz.wav
+music/tones/2khz.wav
+music/tones/3khz.wav
+music/tones/4khz.wav
+music/tones/10khz.wav

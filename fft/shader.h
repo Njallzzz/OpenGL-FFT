@@ -22,15 +22,19 @@ public:
 			const char *fragmentShaderFile);
 	~Shader();
 
-	int compile(ostream *stream);
-	void use();
+	int Compile(ostream *stream);
+	void Use();
 
-	GLint getVertexPointer();
-	GLint getColorTexturePointer();
-	GLint getDataTexturePointer();
+	GLint GetVertexPointer();
+	GLint GetColorTexturePointer();
 
-	void setLowColorGradient(float s);
-	void setHighColorGradient(float s);
+	void SetLowColorGradient(float s);
+	void SetHighColorGradient(float s);
+
+	void SetGridLines(float r, float g, float b, float w);
+
+	GLint GetDataPointer();
+	void SetDataSize(int length);
 
 	void SetLogFreq(int state);
 
@@ -40,8 +44,12 @@ private:
 
 	GLint positionLoc;
 
+	GLint dataSizeLoc;
+	GLint dataLoc;
+
+	GLint gridLinesLoc;
+
 	GLint colorTextureLoc;
-	GLint dataTextureLoc;
 
 	GLint lowGradientLoc;
 	GLint highGradientLoc;

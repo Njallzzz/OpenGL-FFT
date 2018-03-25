@@ -13,22 +13,31 @@ public:
 		const char *windowName, int fps, int pseudodepth);
 	~Window();
 
-	int init();
+	int Init();
 
-	void swapBuffers();
-	bool checkClosed();
+	void Update();
+
+	void SwapBuffers();
+	bool CheckClosed();
 
 	bool MetricsStatus();
-	void showMetrics(bool status);
+	void ShowMetrics(bool status);
 
-	float getAspect();
-	GLFWwindow* getWindowPointer();
+	float GetAspect();
+	GLFWwindow* GetWindowPointer();
+
+	bool GetFullscreen();
+	void SetFullScreen(bool fullscreen);
+
+
 private:
+
 	int m_width, m_height, m_fps, m_pseudodepth;
 	float m_aspect;
 	double m_lastFrame, m_worstFrame, m_bestFrame;
 	bool m_metrics;
 	int m_frameCount;
+	int m_pos[2];
 	const char *m_pWindowName;
 	GLFWwindow *m_pWindow;
 	ostream *m_stream;

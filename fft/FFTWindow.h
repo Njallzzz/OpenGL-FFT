@@ -20,6 +20,9 @@ public:
 	void TogglePlay();
 	void SelectFile(int file);
 
+	float GetVolume();
+	void SetVolume(float volume);
+
 	float GetPitch();
 	void SetPitch(float pitch);
 
@@ -32,6 +35,9 @@ public:
 	int GetWindowSize();
 	void SetWindowSize(int size);
 
+	bool GetGrid();
+	void SetGrid(bool state);
+
 private:
 	void ResizeOutputBuffer();
 
@@ -39,17 +45,15 @@ private:
 	Shader m_shader;
 
 	float bottom, top;
-	bool m_logFreq, m_logMagn;
+	bool m_logFreq, m_logMagn, m_grid;
 
 	int m_outputBufferSize;
 	float *m_outputBuffer;
 
 	int m_dataBufferSize;
-	unsigned char *m_dataBuffer;
 
 	Texture1D *m_colorTexture;
-	Texture1D *m_dataTexture;
 
-	GLuint m_vao, m_baseMesh;
+	GLuint m_vao, m_baseMesh, m_gridMesh, m_logGridMesh, m_databufferObject;
 };
 

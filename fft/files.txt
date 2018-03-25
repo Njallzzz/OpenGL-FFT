@@ -1,7 +1,7 @@
-music/dejavu.wav
-music/becalmed.wav
-music/gas.wav
-music/hearts.wav
-music/outoftouch.wav
 music/eirin.wav
 music/frequencysweep.wav
+music/outoftouch.wav
+music/7min.wav
+music/dejavu.wav
+music/gas.wav
+music/hearts.wav

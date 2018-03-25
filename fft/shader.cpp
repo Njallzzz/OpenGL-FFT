@@ -21,7 +21,7 @@ Shader::~Shader() {
 }
 
 int
-Shader::compile(ostream *stream) {
+Shader::Compile(ostream *stream) {
 	ifstream vt(m_pVertexShader);
 	ifstream ft(m_pFragmentShader);
 
@@ -102,52 +102,63 @@ Shader::compile(ostream *stream) {
 
 	positionLoc = glGetAttribLocation(m_program, "a_position");
 
+	dataSizeLoc = glGetUniformLocation(m_program, "u_dataSize");
+	dataLoc = glGetProgramResourceIndex(m_program, GL_SHADER_STORAGE_BLOCK, "b_dataBuffer");
+	glShaderStorageBlockBinding(m_program, dataLoc, 2);
+
 	colorTextureLoc = glGetUniformLocation(m_program, "u_colorTexture");
-	dataTextureLoc = glGetUniformLocation(m_program, "u_dataTexture");
 
 	lowGradientLoc = glGetUniformLocation(m_program, "u_lowColorGradient");
 	highGradientLoc = glGetUniformLocation(m_program, "u_highColorGradient");
 
-	logFreqLoc = glGetUniformLocation(m_program, "u_logFreq");
+	gridLinesLoc = glGetUniformLocation(m_program, "u_gridLines");
 
-	// Not needed until vao is defined
-	//glEnableVertexAttribArray(positionLoc);
+	logFreqLoc = glGetUniformLocation(m_program, "u_logFreq");
 
 	*stream << "Compiled shader from: \"" << m_pVertexShader << "\" and \"" << m_pFragmentShader << "\"" << endl;
 	return 0;
 }
 
 void
-Shader::use() {
+Shader::Use() {
 	glUseProgram(m_program);
 
 	glUniform1i(colorTextureLoc, 0);
-	glUniform1i(dataTextureLoc, 1);
 }
 
 GLint
-Shader::getVertexPointer() {
+Shader::GetVertexPointer() {
 	return positionLoc;
 }
 
 GLint
-Shader::getColorTexturePointer() {
+Shader::GetColorTexturePointer() {
 	return colorTextureLoc;
 }
 
-GLint
-Shader::getDataTexturePointer() {
-	return dataTextureLoc;
-}
-
 void
-Shader::setLowColorGradient(float s) {
+Shader::SetLowColorGradient(float s) {
 	glUniform1f(lowGradientLoc, s);
 }
 
 void
-Shader::setHighColorGradient(float s) {
+Shader::SetHighColorGradient(float s) {
 	glUniform1f(highGradientLoc, s);
+}
+
+void
+Shader::SetDataSize(int length) {
+	glUniform1i(dataSizeLoc, length);
+}
+
+void
+Shader::SetGridLines(float r, float g, float b, float w) {
+	glUniform4f(gridLinesLoc, r, g, b, w);
+}
+
+GLint
+Shader::GetDataPointer() {
+	return dataLoc;
 }
 
 void

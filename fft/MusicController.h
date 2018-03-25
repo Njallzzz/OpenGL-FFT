@@ -20,11 +20,13 @@ public:
 	bool isPlaying();
 
 	void SelectFile(int file);
-	void SetVolume(float volume);
 
 	float *GetFFTBufferPtr();
 
 	int GetSampleRate();
+
+	float GetVolume();
+	void SetVolume(float volume);
 
 	int GetWindowSize();
 	void SetWindowSize(int size);
@@ -38,6 +40,8 @@ public:
 	void Update();
 
 private:
+	int m_ampSteps;
+
 	bool LoadSettingsFile();
 	bool LoadMusicFile();
 	void GenerateSquareWindow();

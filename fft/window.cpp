@@ -23,7 +23,7 @@ Window::~Window() {
 }
 
 int
-Window::init() {
+Window::Init() {
 	int res = glfwInit();
 	if(res == GLFW_FALSE) {
 		*m_stream << "Fatal error: unable to initialize GLFW" << endl;
@@ -58,6 +58,8 @@ Window::init() {
 	glfwGetFramebufferSize(m_pWindow, &m_width, &m_height);
 	m_aspect = m_width / (float) m_height;
 
+	glViewport(0, 0, m_width, m_height);
+
 	*m_stream << "Opening window with resolution: " << m_width << "x" << m_height << "\t\t";
 	*m_stream << "colordepth(R:" << mode->redBits << " G:" << mode->greenBits;
 	*m_stream << " B:" << mode->blueBits << ")" << "\t\tfps: " << m_fps;
@@ -65,8 +67,13 @@ Window::init() {
 	return 0;
 }
 
+void
+Window::Update() {
+
+}
+
 void 
-Window::swapBuffers() {
+Window::SwapBuffers() {
 	glfwSwapBuffers(m_pWindow);
 
 	if(m_metrics) {
@@ -94,7 +101,7 @@ Window::swapBuffers() {
 }
 
 bool
-Window::checkClosed() {
+Window::CheckClosed() {
 	return !glfwWindowShouldClose(m_pWindow);
 }
 
@@ -104,7 +111,7 @@ Window::MetricsStatus() {
 }
 
 void
-Window::showMetrics(bool status) {
+Window::ShowMetrics(bool status) {
 	m_metrics = status;
 	m_frameCount = 0;
 	m_lastFrame = 0;
@@ -114,11 +121,32 @@ Window::showMetrics(bool status) {
 }
 
 float
-Window::getAspect() {
+Window::GetAspect() {
 	return m_aspect;
 }
 
 GLFWwindow*
-Window::getWindowPointer() {
+Window::GetWindowPointer() {
 	return m_pWindow;
+}
+
+bool
+Window::GetFullscreen() {
+	return glfwGetWindowMonitor(m_pWindow) != nullptr;
+}
+
+void
+Window::SetFullScreen(bool fullscreen) {
+	if (fullscreen) {
+		glfwGetWindowPos(m_pWindow, &m_pos[0], &m_pos[1]);
+
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode *v = glfwGetVideoMode(monitor);
+		glfwSetWindowMonitor(m_pWindow, monitor, 0, 0, v->width, v->height, v->refreshRate);
+		glViewport(0, 0, v->width, v->height);
+	} else {
+		glfwSetWindowMonitor(m_pWindow, nullptr, 0, 0, m_width, m_height, m_fps);
+		glfwSetWindowPos(m_pWindow, m_pos[0], m_pos[1]);
+		glViewport(0, 0, m_width, m_height);
+	}
 }
